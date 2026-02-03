@@ -1,20 +1,27 @@
+# ===== Core OCR stack (stable on Windows + Python 3.11) =====
+paddlepaddle==2.6.2
+paddleocr==2.7.0.3
+
+# Avoid NumPy 2.x ABI issues
 numpy==1.26.4
-pandas==2.2.2
-scikit-learn==1.4.2
-scipy==1.11.4
 
-opentelemetry-api>=1.27.0
-opentelemetry-exporter-otlp>=1.27.0
-opentelemetry-proto>=1.27.0
-opentelemetry-sdk>=1.27.0
-einops>=0.7.0
+# OpenCV pinned for compatibility
+opencv-python==4.6.0.66
 
-google-cloud-storage
+# PaddleOCR runtime deps (explicit)
+pillow
+shapely
+pyclipper
+scikit-image
+protobuf==3.20.3
+lmdb
+pyyaml
+tqdm
+requests
+
+# PDF -> images (no PyMuPDF)
 pdf2image
-Pillow
-pypdf
-addict
-matplotlib
 
-transformers==4.46.3
-tokenizers==0.20.3
+# Data handling
+pandas
+openpyxl
