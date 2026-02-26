@@ -13,33 +13,72 @@ DB_CONFIG = {
 GROWTH_LIMITS = (-0.95, 5.0)
 MARKET_CAP_TOLERANCE = 0.05  # Cho phép sai số 5%
 
-def get_latest_data():
-    """Lấy dữ liệu từ view vw_firm_panel_latest"""
+def get_db_connection():
+    return mysql.connector.connect(**DB_CONFIG)
+
+def get_financial_data():
+    """Lấy dữ liệu tài chính tổng hợp từ View"""
     try:
-        conn = mysql.connector.connect(**DB_CONFIG)
+        conn = get_db_connection()
         query = "SELECT * FROM vw_firm_panel_latest"
         df = pd.read_sql(query, conn)
         conn.close()
         return df
     except Exception as e:
-        print(f"Lỗi kết nối CSDL: {e}")
+        print(f"Lỗi khi lấy dữ liệu từ View: {e}")
         return None
 
-def run_qc_checks(df, df_ext):
+def get_market_data():
+    """Lấy giá cổ phiếu trực tiếp từ bảng fact_market_year (Snapshot mới nhất)"""
+    try:
+        conn = get_db_connection()
+        query = """
+            SELECT f.ticker, m.fiscal_year, m.share_price 
+            FROM (
+                SELECT *, ROW_NUMBER() OVER (PARTITION BY firm_id, fiscal_year ORDER BY snapshot_id DESC) as rn
+                FROM fact_market_year
+            ) m
+            JOIN dim_firm f ON m.firm_id = f.firm_id
+            WHERE m.rn = 1
+        """
+        df = pd.read_sql(query, conn)
+        conn.close()
+        return df
+    except Exception as e:
+        print(f"Lỗi khi lấy dữ liệu Market: {e}")
+        return pd.DataFrame(columns=['ticker', 'fiscal_year', 'share_price'])
+
+def get_innovation_data():
+    """Lấy dữ liệu đổi mới và note trực tiếp từ bảng fact_innovation_year"""
+    try:
+        conn = get_db_connection()
+        query = """
+            SELECT f.ticker, iv.fiscal_year, iv.evidence_note 
+            FROM (
+                SELECT *, ROW_NUMBER() OVER (PARTITION BY firm_id, fiscal_year ORDER BY snapshot_id DESC) as rn
+                FROM fact_innovation_year
+            ) iv
+            JOIN dim_firm f ON iv.firm_id = f.firm_id
+            WHERE iv.rn = 1
+        """
+        df = pd.read_sql(query, conn)
+        conn.close()
+        return df
+    except Exception as e:
+        print(f"Lỗi khi lấy dữ liệu Innovation: {e}")
+        return pd.DataFrame()
+
+def run_qc_checks(df, df_mkt, df_inn):
     """Thực hiện các quy định QC tối thiểu theo yêu cầu dự án"""
     qc_results = []
-    df = pd.merge(
-        df, 
-        df_ext[['ticker', 'fiscal_year', 'share_price']], 
-        on=['ticker', 'fiscal_year'], 
-        how='left', 
-        suffixes=('', '_ext')
-    )
+    df = pd.merge(df, df_mkt, on=['ticker', 'fiscal_year'], how='left')
+    df = pd.merge(df, df_inn, on=['ticker', 'fiscal_year'], how='left')
 
     for index, row in df.iterrows():
         ticker = row['ticker']
         year = row['fiscal_year']
 
+        # Các điều kiện kiểm tra tối thiểu
         # 1. Kiểm tra Ownership ratios trong khoảng [0, 1]
         own_fields = ['managerial_inside_own', 'state_own', 'institutional_own', 'foreign_own']
         for field in own_fields:
@@ -51,27 +90,31 @@ def run_qc_checks(df, df_ext):
                 })
 
         # 2. Kiểm tra Shares outstanding > 0
-        shares = row.get('total_share_outstanding')
+        shares = row.get('shares_outstanding')
         if shares is not None and shares <= 0:
             qc_results.append({
-                'ticker': ticker, 'fiscal_year': year, 'field_name': 'total_share_outstanding',
+                'ticker': ticker, 'fiscal_year': year, 'field_name': 'shares_outstanding',
                 'error_type': 'INVALID_VALUE', 'message': 'Số lượng cổ phiếu phải lớn hơn 0'
             })
 
         # 3. Kiểm tra các trường không âm
         non_negative_fields = [  
             'total_sales_revenue',           
-            'net_sales_revenue',              
+            'net_sales',              
             'total_assets',                       
-            'intangible_assets_value',                       
+            'intangible_assets_net',                       
             'total_liabilities',            
-            'cash_and_cash_equivalent',       
+            'cash_and_equivalents',       
             'long_term_debt',                 
             'current_assets',                  
             'current_liabilities',           
-            'total_inventory',                
-            'dividend_payment',               
-            'net_ppe'
+            'inventory',                
+            'dividend_cash_paid',               
+            'net_ppe',
+            'wip_goods_purchase',
+            'merchandise_purchase_year',
+            'firm_age',
+            'employees_count'
         ]
         for field in non_negative_fields:
             val = row.get(field)
@@ -85,14 +128,12 @@ def run_qc_checks(df, df_ext):
         non_positive_fields = [
             'selling_expenses',             
             'general_admin_expenses',
-            'overhead_manufacturing',         
-            'raw_material_consumption',       
-            'merchandise_purchase',          
-            'wip_goods_purchase',            
+            'manufacturing_overhead',         
+            'raw_material_consumption',                            
             'outside_manufacturing_expenses', 
             'production_cost',                
-            'rnd_expenditure', 
-            'capital_expenditure',  
+            'rnd_expenses', 
+            'capex',  
         ]
         for field in non_positive_fields:
             val = row.get(field)
@@ -112,7 +153,7 @@ def run_qc_checks(df, df_ext):
                 })
 
         # 6. Kiểm tra tính nhất quán Market Cap
-        price = row.get('share_price_ext') if pd.notnull(row.get('share_price_ext')) else row.get('share_price')
+        price = row.get('share_price')
         mkt_cap = row.get('market_value_equity')
         if all(v is not None for v in [shares, price, mkt_cap]):
             calculated_cap = shares * price
@@ -123,10 +164,11 @@ def run_qc_checks(df, df_ext):
                     'error_type': 'INCONSISTENT', 'message': f'Sai lệch vốn hóa ({diff:.2%}) so với tính toán'
                 })
         
+        # Các điều kiện thêm ngoài 6 mục tối thiểu
         # 7. Kiểm tra tính cân đối của bảng cân đối kế toán
         assets = row.get('total_assets')
         liabilities = row.get('total_liabilities')
-        equity = row.get('total_shareholders_equity')
+        equity = row.get('total_equity')
 
         # Kiểm tra nếu cả 3 biến đều có dữ liệu
         if all(v is not None for v in [assets, liabilities, equity]):
@@ -146,7 +188,7 @@ def run_qc_checks(df, df_ext):
                     'message': f'Bảng cân đối không khớp. Chênh lệch: {absolute_diff:,.0f} ({relative_diff:.2%})'
                 })
 
-       # 8. Kiểm tra tính hợp lý của các khoản mục cấu thành
+       # 8. Kiểm tra tính hợp lý thành phần tài sản
         curr_assets = row.get('current_assets')
         if assets is not None and curr_assets is not None and curr_assets > assets:
             qc_results.append({
@@ -154,42 +196,73 @@ def run_qc_checks(df, df_ext):
                 'error_type': 'COMPONENT_ERROR', 'message': 'Tài sản ngắn hạn vượt quá tổng tài sản'
             })
 
-        cash = row.get('cash_and_cash_equivalents')
+        cash = row.get('cash_and_equivalents')
         inv = row.get('total_inventory')
-        if curr_assets is not None:
-            if cash is not None and cash > curr_assets:
-                qc_results.append({
-                    'ticker': ticker, 'fiscal_year': year, 'field_name': 'cash',
-                    'error_type': 'COMPONENT_ERROR', 'message': 'Tiền mặt vượt quá tài sản ngắn hạn'
-                })
-            if inv is not None and inv > curr_assets:
-                qc_results.append({
-                    'ticker': ticker, 'fiscal_year': year, 'field_name': 'inventory',
-                    'error_type': 'COMPONENT_ERROR', 'message': 'Hàng tồn kho vượt quá tài sản ngắn hạn'
-                })
+        if curr_assets is not None and cash is not None and inv is not None and (cash + inv) > curr_assets:
+            qc_results.append({
+                'ticker': ticker, 'fiscal_year': year, 'field_name': 'cash_and_equivalents/total_inventory',
+                'error_type': 'COMPONENT_ERROR', 'message': 'Tổng tiền mặt và hàng tồn kho vượt quá tài sản ngắn hạn'
+            })
 
+        ppe = row.get('net_ppe')
+        intang = row.get('intangible_assets_net')
+        if assets is not None and ppe is not None and intang is not None and (ppe + intang) > assets:
+            qc_results.append({
+                'ticker': ticker, 'fiscal_year': year, 'field_name': 'net_ppe/intangible_assets_net',
+                'error_type': 'COMPONENT_ERROR', 'message': 'Tổng PPE và tài sản vô hình vượt quá tổng tài sản'
+            })
+
+        # 9. Kiểm tra tính hợp lý thành phần nợ
         lt_debt = row.get('long_term_debt')
         curr_liab = row.get('current_liabilities')
-        if liabilities is not None:
-            if lt_debt is not None and lt_debt > liabilities:
+        if liabilities is not None and lt_debt is not None and curr_liab is not None and (lt_debt + curr_liab) > liabilities:
                 qc_results.append({
                     'ticker': ticker, 'fiscal_year': year, 'field_name': 'long_term_debt',
-                    'error_type': 'COMPONENT_ERROR', 'message': 'Nợ dài hạn vượt quá tổng nợ'
-                })
-            if curr_liab is not None and curr_liab > liabilities:
-                qc_results.append({
-                    'ticker': ticker, 'fiscal_year': year, 'field_name': 'current_liabilities',
-                    'error_type': 'COMPONENT_ERROR', 'message': 'Nợ ngắn hạn vượt quá tổng nợ'
+                    'error_type': 'COMPONENT_ERROR', 'message': 'Nợ dài hạn và nợ ngắn hạn vượt quá tổng nợ'
                 })
 
-        # 9. Kiểm tra các trường dummy (0/1)
+        # 10. Kiểm tra các biến về doanh thu và lợi nhuận:
+        revenue = row.get('net_sales')
+        net_income = row.get('net_income')
+        if revenue is not None and net_income is not None and net_income > revenue:
+            qc_results.append({
+                'ticker': ticker, 'fiscal_year': year, 'field_name': 'net_income',
+                'error_type': 'COMPONENT_ERROR', 'message': 'Lợi nhuận ròng vượt quá doanh thu'
+            })
+
+        total_revenue = row.get('total_sales_revenue')
+        if total_revenue is not None and revenue is not None and revenue > total_revenue:
+            qc_results.append({
+                'ticker': ticker, 'fiscal_year': year, 'field_name': 'net_sales',
+                'error_type': 'COMPONENT_ERROR', 'message': 'Doanh thu thuần vượt quá doanh thu tổng'
+            })
+
+        # 11. Kiểm tra các trường dummy (0/1)
+        prod = row['product_innovation']
+        proc = row['process_innovation']
+        note = str(row['evidence_note']).strip() if row['evidence_note'] else ""
+
+        # Kiểm tra giá trị dummy chỉ được là 0 hoặc 1
         for field in ['product_innovation', 'process_innovation']:
             val = row.get(field)
             if val is not None and val not in [0, 1]:
                 qc_results.append({
                     'ticker': ticker, 'fiscal_year': year, 'field_name': field,
-                    'error_type': 'INVALID_DUMMY', 'message': f'Trường {field} phải là 0 hoặc 1'
+                    'error_type': 'INVALID_DUMMY', 'message': f'Giá trị {field} phải là 0 hoặc 1'
                 })
+
+        # Check Dummy - Note relationship
+        if (prod == 1 or proc == 1) and (not note or note.lower() in ['nan', 'none']):
+            qc_results.append({
+                'ticker': ticker, 'fiscal_year': year, 'field_name': 'evidence_note',
+                'error_type': 'MISSING_NOTE', 'message': 'Đã đánh dấu Đổi mới (1) nhưng thiếu thuyết minh (Note)'
+            })
+        
+        if (prod == 0 and proc == 0) and (note and note.lower() not in ['nan', 'none']):
+             qc_results.append({
+                'ticker': ticker, 'fiscal_year': year, 'field_name': 'evidence_note',
+                'error_type': 'UNEXPECTED_NOTE', 'message': 'Có note thuyết minh nhưng biến Dummy đều là 0'
+            })
 
     return pd.DataFrame(qc_results)
 
@@ -197,48 +270,25 @@ def main():
     if not os.path.exists('outputs'):
         os.makedirs('outputs')
 
-    df_db = get_latest_data()
+    print("Đang tải dữ liệu từ Database...")
+    df_fin = get_financial_data()
+    df_mkt = get_market_data()
+    df_inn = get_innovation_data()
     
-    price_csv_path = "data/external_share_prices.csv"
-    if os.path.exists(price_csv_path):
-        df_ext = pd.read_csv(price_csv_path)
-    else:
-        df_ext = pd.DataFrame(columns=['ticker', 'fiscal_year', 'share_price'])
-    
-    if df_db is not None and not df_db.empty:
-        report_df = run_qc_checks(df_db, df_ext)
-        report_path = 'outputs/qc_report.csv'
-        report_df.to_csv(report_path, index=False, encoding='utf-8-sig')
-
-        print(f"Hoàn thành! Báo cáo đã được lưu tại: {report_path}")
-        print(f"Tổng số lỗi phát hiện: {len(report_df)}")
-    else:
-        print("Không có dữ liệu để kiểm tra.")
+    if df_fin is not None:
+        print("Đang chạy kiểm tra QC...")
+        report_df = run_qc_checks(df_fin, df_mkt, df_inn)
         
-def test_qc_logic(): # Tạo dữ liệu giả lập 
-    data = {
-        'ticker': ['GVR', 'GVR'],
-        'fiscal_year': [2023, 2024],
-        'total_assets': [1000, -500], # Dòng 2 cố tình để âm để test
-        'total_liabilities': [600, 300],
-        'total_shareholders_equity': [400, 100], # Dòng 1 cân (600+400=1000), Dòng 2 lệch
-        'current_assets': [500, 200],
-        'cash_and_cash_equivalent': [600, 50], # Dòng 1 lỗi: Tiền > Tài sản ngắn hạn
-        'total_share_outstanding': [100, 100],
-        'market_value_equity': [2000, 3000]
-    }
-    df_test = pd.DataFrame(data)
-    
-    # Giả lập file external price
-    df_ext = pd.DataFrame({
-        'ticker': ['GVR', 'GVR'],
-        'fiscal_year': [2023, 2024],
-        'share_price': [20, 25]
-    })
-    
-    # Chạy thử hàm QC
-    report = run_qc_checks(df_test, df_ext)
-    print(report)
+        if not report_df.empty:
+            report_path = 'outputs/qc_report_final.csv'
+            report_df.to_csv(report_path, index=False, encoding='utf-8-sig')
+            print(f"Đã tìm thấy {len(report_df)} cảnh báo. Chi tiết tại: {report_path}")
+        else:
+            print("Chúc mừng! Dữ liệu không có lỗi logic nào.")
+    else:
+        print("Không thể kết nối để lấy dữ liệu.")
 
 if __name__ == "__main__":
-    test_qc_logic() # chạy thử dữ liệu giả lập
+    main()
+
+
