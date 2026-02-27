@@ -1,3 +1,4 @@
+import pandas as pd
 import mysql.connector
 from datetime import datetime
 
@@ -9,27 +10,47 @@ db_config = {
     "database": "vn_firm_panel_test"
 }
 
-def create_snapshot(source_name, fiscal_year, p_from, p_to, version_tag, created_by="Group_Member"):
+def create_snapshot_from_excel(excel_path):
     """
-    Tạo một snapshot mới với khoảng thời gian period_from và period_to.
+    Đọc cấu hình từ sheet version_info và tạo snapshot trong SQL.
     """
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor()
-    
     try:
+        # Đọc sheet version_info
+        df_ver = pd.read_excel(excel_path, sheet_name='version_info')
+        
+        # Xử lý giá trị trống (NaN)
+        df_ver = df_ver.where(pd.notnull(df_ver), None)
+        
+        # Lấy dòng đầu tiên của sheet để làm thông tin snapshot
+        if df_ver.empty:
+            print("Lỗi: Sheet version_info không có dữ liệu!")
+            return None
+        
+        config = df_ver.iloc[0] # Lấy dòng đầu tiên
+        
+        source_name = config['source_name']
+        fiscal_year = int(config['fiscal_year'])
+        p_from      = str(config['period_from'])
+        p_to        = str(config['period_to'])
+        version_tag = config['version_tag']
+        created_by  = "Group_Member"
+
+        # Kết nối Database
+        conn = mysql.connector.connect(**db_config)
+        cursor = conn.cursor()
+
         # Bước 1: Tra cứu source_id
         cursor.execute("SELECT source_id FROM dim_data_source WHERE source_name = %s", (source_name,))
         result = cursor.fetchone()
         
         if not result:
-            print(f"Lỗi: Nguồn dữ liệu '{source_name}' không tồn tại!")
+            print(f"Lỗi: Nguồn '{source_name}' chưa có trong dim_data_source. Hãy chạy Script A trước!")
             return None
         
         source_id = result[0]
         snapshot_date = datetime.now().strftime('%Y-%m-%d')
 
-        # Bước 2: Chèn bản ghi mới vào fact_data_snapshot
-        # Sử dụng đúng tên cột period_from và period_to
+        # Bước 2: Chèn vào fact_data_snapshot
         query = """
             INSERT INTO fact_data_snapshot 
             (snapshot_date, fiscal_year, period_from, period_to, source_id, version_tag, created_by)
@@ -40,35 +61,27 @@ def create_snapshot(source_name, fiscal_year, p_from, p_to, version_tag, created
         cursor.execute(query, values)
         conn.commit()
         
-        new_snapshot_id = cursor.lastrowid
+        new_id = cursor.lastrowid
         
-        print(f"--- ĐÃ TẠO SNAPSHOT THÀNH CÔNG ---")
-        print(f"Snapshot ID : {new_snapshot_id}")
-        print(f"Khoảng thời gian: {p_from} đến {p_to}")
-        print(f"Năm tài chính : {fiscal_year}")
-        print(f"Phiên bản      : {version_tag}")
+        print(f"--- ĐÃ TẠO SNAPSHOT TỪ EXCEL THÀNH CÔNG ---")
+        print(f"Snapshot ID : {new_id}")
+        print(f"Thông tin   : {source_name} | {fiscal_year} | {version_tag}")
         
-        return new_snapshot_id
+        return new_id
 
-    except mysql.connector.Error as err:
-        print(f"Lỗi Database: {err}")
+    except Exception as e:
+        print(f"Lỗi khi thực hiện Script B: {e}")
         return None
     finally:
-        cursor.close()
-        conn.close()
+        if 'conn' in locals() and conn.is_connected():
+            cursor.close()
+            conn.close()
 
 if __name__ == "__main__":
-    # VÍ DỤ CÁCH ĐIỀN:
-    # Nếu là báo cáo năm 2024: From là 01-01, To là 31-12
-    # Định dạng ngày nên là 'YYYY-MM-DD' để SQL hiểu đúng
+    # Đường dẫn file chứa 3 sheet: company_info, source_info, version_info
+    excel_file = "data/ttin cty.xlsx"
     
-    new_id = create_snapshot(
-        source_name="Vietstock", 
-        fiscal_year=2024, 
-        p_from="2024-01-01", 
-        p_to="2024-12-31", 
-        version_tag="v1.0_initial"
-    )
+    snapshot_id = create_snapshot_from_excel(excel_file)
     
-    if new_id:
-        print(f"\n=> Hãy dùng ID {new_id} này cho Script C.")
+    if snapshot_id:
+        print(f"\n=> Pipeline Ready: Hãy dùng ID {snapshot_id} cho Script C.")
