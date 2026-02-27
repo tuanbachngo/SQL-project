@@ -1,7 +1,7 @@
 import mysql.connector
 from datetime import datetime
 
-# 1. Cấu hình kết nối MySQL (Thay đổi thông số cho khớp với máy của bạn)
+# 1. Cấu hình kết nối MySQL
 db_config = {
     "host": "localhost",
     "user": "root",
@@ -9,45 +9,44 @@ db_config = {
     "database": "vn_firm_panel_test"
 }
 
-def create_snapshot(source_name, fiscal_year, version_tag, created_by="Group_Member"):
+def create_snapshot(source_name, fiscal_year, p_from, p_to, version_tag, created_by="Group_Member"):
     """
-    Tạo một snapshot mới trong bảng fact_data_snapshot.
-    Trả về snapshot_id nếu thành công.
+    Tạo một snapshot mới với khoảng thời gian period_from và period_to.
     """
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor()
     
     try:
-        # Bước 1: Tra cứu source_id dựa trên source_name từ bảng dim_data_source
-        # Tên này phải khớp chính xác với cột 'source_name' trong sheet source_info của bạn
+        # Bước 1: Tra cứu source_id
         cursor.execute("SELECT source_id FROM dim_data_source WHERE source_name = %s", (source_name,))
         result = cursor.fetchone()
         
         if not result:
-            print(f"Lỗi: Nguồn dữ liệu '{source_name}' không tồn tại trong danh mục dim_data_source!")
-            print("Vui lòng chạy Script A trước hoặc kiểm tra lại sheet source_info.")
+            print(f"Lỗi: Nguồn dữ liệu '{source_name}' không tồn tại!")
             return None
         
         source_id = result[0]
         snapshot_date = datetime.now().strftime('%Y-%m-%d')
 
-        # Bước 2: Chèn bản ghi mới vào bảng fact_data_snapshot
-        # Cấu trúc: (snapshot_date, fiscal_year, source_id, version_tag, created_by)
+        # Bước 2: Chèn bản ghi mới vào fact_data_snapshot
+        # Sử dụng đúng tên cột period_from và period_to
         query = """
-            INSERT INTO fact_data_snapshot (snapshot_date, fiscal_year, source_id, version_tag, created_by)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO fact_data_snapshot 
+            (snapshot_date, fiscal_year, period_from, period_to, source_id, version_tag, created_by)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
-        values = (snapshot_date, fiscal_year, source_id, version_tag, created_by)
+        values = (snapshot_date, fiscal_year, p_from, p_to, source_id, version_tag, created_by)
         
         cursor.execute(query, values)
         conn.commit()
         
-        # Bước 3: Lấy ID vừa tự động sinh ra
         new_snapshot_id = cursor.lastrowid
         
         print(f"--- ĐÃ TẠO SNAPSHOT THÀNH CÔNG ---")
-        print(f"Snapshot ID: {new_snapshot_id}")
-        print(f"Nguồn: {source_name} | Năm tài chính: {fiscal_year} | Phiên bản: {version_tag}")
+        print(f"Snapshot ID : {new_snapshot_id}")
+        print(f"Khoảng thời gian: {p_from} đến {p_to}")
+        print(f"Năm tài chính : {fiscal_year}")
+        print(f"Phiên bản      : {version_tag}")
         
         return new_snapshot_id
 
@@ -59,14 +58,17 @@ def create_snapshot(source_name, fiscal_year, version_tag, created_by="Group_Mem
         conn.close()
 
 if __name__ == "__main__":
-    # Ví dụ thực tế dựa trên dữ liệu sheet source_info của bạn:
-    # Bạn có thể chọn source_name là 'Vietstock', 'BCTC_Audited' hoặc 'BCTN'
+    # VÍ DỤ CÁCH ĐIỀN:
+    # Nếu là báo cáo năm 2024: From là 01-01, To là 31-12
+    # Định dạng ngày nên là 'YYYY-MM-DD' để SQL hiểu đúng
     
-    selected_source = "Combined_Source" 
-    target_year = 2024
-    v_tag = "v1.0_initial_import"
-    
-    new_id = create_snapshot(selected_source, target_year, v_tag)
+    new_id = create_snapshot(
+        source_name="Vietstock", 
+        fiscal_year=2024, 
+        p_from="2024-01-01", 
+        p_to="2024-12-31", 
+        version_tag="v1.0_initial"
+    )
     
     if new_id:
-        print(f"\n=> Bạn hãy copy ID {new_id} này để nhập vào Script C.")
+        print(f"\n=> Hãy dùng ID {new_id} này cho Script C.")
