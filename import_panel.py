@@ -2,11 +2,13 @@ import argparse
 import re
 from datetime import date
 from typing import Any, Dict, List, Optional, Tuple
-
+import os
 import pandas as pd
 import pymysql
+import math
+from datetime import date
 
-
+print(">>> import_panel.py loaded")
 # ----------------------------
 # Cleaning / parsing helpers
 # ----------------------------
@@ -167,40 +169,53 @@ def upsert_many(conn, table: str, cols: List[str], rows: List[Tuple[Any, ...]]) 
     if update_expr:
         sql += f" ON DUPLICATE KEY UPDATE {update_expr}"
 
-    with conn.cursor() as cur:
-        cur.executemany(sql, rows)
-        return cur.rowcount
+    def _fix_nan(v):
+        # pandas/numpy NaN => None
+        if v is None:
+            return None
+        if isinstance(v, float) and math.isnan(v):
+            return None
+        return v
 
-def ensure_data_source(conn, source_name: str, source_type: str = "financial_statement") -> int:
-    """
-    Ensure dim_data_source has source_name. Return source_id.
-    """
+    with conn.cursor() as cur:
+        safe_rows = [tuple(_fix_nan(x) for x in row) for row in rows]
+        cur.executemany(sql, safe_rows)
+        return cur.rowcount
+    
+def get_data_source_id(conn, source_name: str) -> int:
     with conn.cursor() as cur:
         cur.execute("SELECT source_id FROM dim_data_source WHERE source_name=%s", (source_name,))
         row = cur.fetchone()
-        if row:
-            return int(row["source_id"])
+        if not row:
+            raise SystemExit(
+                f"❌ source_name '{source_name}' not found in dim_data_source. "
+                f"Please choose an existing source_name (e.g., BCTC_Audited)."
+            )
+        return int(row["source_id"])
 
-        cur.execute(
-            "INSERT INTO dim_data_source (source_name, source_type, provider, note) VALUES (%s,%s,%s,%s)",
-            (source_name, source_type, "TEAM", "auto-created by pipeline"),
-        )
-        return int(cur.lastrowid)
-
-def create_snapshot(conn, source_id: int, fiscal_year: int, snapshot_date: str, version_tag: str, created_by: str) -> int:
+def get_snapshot_id(conn, source_id: int, fiscal_year: int, version_tag: str) -> int:
     """
-    Insert a snapshot record. Return snapshot_id.
-    If you want idempotent behavior, you can also SELECT by unique keys and reuse.
+    Pick the latest snapshot for (source_id, fiscal_year, version_tag).
+    'Latest' is by snapshot_date then snapshot_id (tie-breaker).
     """
     with conn.cursor() as cur:
         cur.execute(
             """
-            INSERT INTO fact_data_snapshot (snapshot_date, period_from, period_to, fiscal_year, source_id, version_tag, created_by)
-            VALUES (%s, NULL, NULL, %s, %s, %s, %s)
+            SELECT snapshot_id, snapshot_date
+            FROM fact_data_snapshot
+            WHERE source_id=%s AND fiscal_year=%s AND version_tag=%s
+            ORDER BY snapshot_date DESC, snapshot_id DESC
+            LIMIT 1
             """,
-            (snapshot_date, fiscal_year, source_id, version_tag, created_by),
+            (source_id, fiscal_year, version_tag),
         )
-        return int(cur.lastrowid)
+        row = cur.fetchone()
+        if not row:
+            raise SystemExit(
+                f"❌ Missing snapshot for year={fiscal_year}, source_id={source_id}, version_tag={version_tag}. "
+                f"Please run Script B first."
+            )
+        return int(row["snapshot_id"])
 
 
 # ----------------------------
@@ -208,28 +223,31 @@ def create_snapshot(conn, source_id: int, fiscal_year: int, snapshot_date: str, 
 # ----------------------------
 def main():
     ap = argparse.ArgumentParser(description="Load FINAL Excel (39 vars) into vn_firm_panel FACT tables.")
-    ap.add_argument("--excel", required=True, help="Path to Final Excel file")
-    ap.add_argument("--sheet", default="master_39", help="Sheet name (default: master_39)")
 
-    ap.add_argument("--db-host", required=True)
+    ap.add_argument("--excel", default="data/Final Gộp 39 trường dữ liệu (FINAL).xlsx")
+    ap.add_argument("--sheet", default="master_39")
+
+    ap.add_argument("--db-host", default="localhost")
     ap.add_argument("--db-port", type=int, default=3306)
-    ap.add_argument("--db-user", required=True)
-    ap.add_argument("--db-pass", required=True)
-    ap.add_argument("--db-name", required=True)
+    ap.add_argument("--db-user", default="root")
+    ap.add_argument("--db-pass", default="1234")
+    ap.add_argument("--db-name", default="vn_firm_panel_test")
 
-    ap.add_argument("--source-name", default="Gemini_2_5_Pro", help="dim_data_source.source_name")
-    ap.add_argument("--snapshot-date", default=str(date.today()), help="YYYY-MM-DD")
-    ap.add_argument("--version-tag", default="v1_final", help="Version tag (will be suffixed by year)")
-    ap.add_argument("--created-by", default="TEAM", help="created_by in snapshot")
+    ap.add_argument("--source-name", default="Vietstock")
+    ap.add_argument("--version-tag", default="v1.0_initial")
+    ap.add_argument("--created-by", default="Group_Member")
 
     ap.add_argument("--currency-code", default="VND")
     ap.add_argument("--unit-scale", type=int, default=1)
     ap.add_argument("--price-reference", default="close_year_end")
 
     args = ap.parse_args()
+    print(">>> args =", args)
 
     df = pd.read_excel(args.excel, sheet_name=args.sheet)
     df.columns = [norm_colname(c) for c in df.columns]  # strip weird spaces in headers
+    print(">>> df rows =", len(df))
+    print(">>> df cols =", list(df.columns))
 
     # Require minimal keys
     if "ticker" not in df.columns or "fiscal_year" not in df.columns:
@@ -241,6 +259,9 @@ def main():
 
     # Drop blank rows
     df = df.dropna(subset=["ticker", "fiscal_year"]).copy()
+    print(">>> df rows after drop blank =", len(df))
+    print(">>> years found =", sorted(df["fiscal_year"].dropna().unique().tolist()))
+    print(">>> tickers found =", sorted(df["ticker"].dropna().unique().tolist())[:10], "...")
 
     # Common rename to match schema
     rename_map = {
@@ -271,6 +292,19 @@ def main():
 
     # Connect DB
     conn = mysql_connect(args.db_host, args.db_port, args.db_user, args.db_pass, args.db_name)
+
+    # --- DEBUG STEP 3: verify DB connection + schema ---
+    with conn.cursor() as cur:
+        cur.execute("SELECT DATABASE() AS db")
+        print(">>> Connected DB =", cur.fetchone()["db"])
+
+        cur.execute("SELECT COUNT(*) AS n FROM dim_firm")
+        print(">>> dim_firm rows =", cur.fetchone()["n"])
+
+        cur.execute("SHOW TABLES LIKE 'fact_financial_year'")
+        print(">>> has fact_financial_year =", cur.fetchone() is not None)
+    # --- END DEBUG ---
+
     try:
         # Firm mapping
         tickers = sorted(df["ticker"].unique().tolist())
@@ -282,21 +316,22 @@ def main():
         df["firm_id"] = df["ticker"].map(firm_map).astype(int)
 
         # Data source + snapshots per year
-        source_id = ensure_data_source(conn, args.source_name)
+        source_id = get_data_source_id(conn, args.source_name)
         years = sorted(df["fiscal_year"].dropna().unique().tolist())
 
         snapshots: Dict[int, int] = {}
         for y in years:
-            # create snapshot per fiscal year (schema expects fiscal_year NOT NULL)
-            snap_id = create_snapshot(
+            y = int(y)
+            tag = args.version_tag
+            snap_id = get_snapshot_id(
                 conn,
                 source_id=source_id,
-                fiscal_year=int(y),
-                snapshot_date=args.snapshot_date,
-                version_tag=f"{args.version_tag}_{int(y)}",
-                created_by=args.created_by,
+                fiscal_year=y,
+                version_tag=tag,
             )
-            snapshots[int(y)] = snap_id
+            snapshots[y] = snap_id
+            print(f">>> picked snapshot: year={y}, source_id={source_id}, version_tag={tag} -> snapshot_id={snap_id}")
+           
 
         # Fill common metadata defaults
         df["_currency_code"] = args.currency_code
@@ -358,6 +393,15 @@ def main():
             dyy["snapshot_id"] = snap_id
 
             # 1) ownership
+
+            s = pd.to_numeric(dyy["managerial_inside_own"], errors="coerce")
+            print(">>> managerial_inside_own min/max:", s.min(), s.max())
+
+            bad = dyy[s.notna() & ((s < 0) | (s > 1))][["ticker","fiscal_year","managerial_inside_own"]]
+            print(">>> bad managerial rows:", len(bad))
+            if len(bad):
+                print(bad.head(20).to_string(index=False))
+
             ownership_cols = key_cols + ownership_fields
             ownership_rows = [tuple(r.get(c) for c in ownership_cols) for _, r in dyy.iterrows()]
             stats["fact_ownership_year"] += upsert_many(conn, "fact_ownership_year", ownership_cols, ownership_rows)
@@ -409,6 +453,7 @@ def main():
             meta_rows = [tuple(r.get(c) for c in meta_cols) for _, r in dyy.iterrows()]
             stats["fact_firm_year_meta"] += upsert_many(conn, "fact_firm_year_meta", meta_cols, meta_rows)
 
+        print(">>> stats so far =", stats)
         conn.commit()
 
         print("✅ DONE. Rowcount (includes updates):")
@@ -422,7 +467,6 @@ def main():
         raise
     finally:
         conn.close()
-
 
 if __name__ == "__main__":
     main()
