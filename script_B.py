@@ -1,14 +1,20 @@
 import pandas as pd
-import mysql.connector
+import pymysql
 from datetime import datetime
 
 # 1. Cấu hình kết nối MySQL
 db_config = {
     "host": "localhost",
     "user": "root",
-    "password": "Binhthaii0203=))",
-    "database": "vn_firm_panel_test"
+    "password": "1234",
+    "db": "vn_firm_panel_test",
+    "charset": "utf8mb4"
 }
+
+def clean_date(x):
+    if x is None or pd.isna(x):
+        return None
+    return pd.to_datetime(x).date().isoformat()
 
 def create_snapshots_from_excel(excel_path):
     """
@@ -30,8 +36,10 @@ def create_snapshots_from_excel(excel_path):
             return []
 
         # Kết nối Database
-        conn = mysql.connector.connect(**db_config)
+        conn = pymysql.connect(**db_config)
         cursor = conn.cursor()
+
+        snapshot_date = datetime.now().strftime('%Y-%m-%d')  # lấy 1 lần cho cả batch
 
         print(f"--- Bắt đầu tạo snapshots (Tìm thấy {len(df_ver)} dòng) ---")
 
@@ -39,8 +47,8 @@ def create_snapshots_from_excel(excel_path):
         for index, config in df_ver.iterrows():
             source_name = config['source_name']
             fiscal_year = int(config['fiscal_year'])
-            p_from      = str(config['period_from'])
-            p_to        = str(config['period_to'])
+            p_from = clean_date(config.get('period_from'))
+            p_to   = clean_date(config.get('period_to'))
             version_tag = config['version_tag']
             created_by  = "Group_Member"
 
@@ -53,7 +61,6 @@ def create_snapshots_from_excel(excel_path):
                 continue
             
             source_id = result[0]
-            snapshot_date = datetime.now().strftime('%Y-%m-%d')
 
             # 1.2 Chèn vào fact_data_snapshot
             query = """
@@ -79,9 +86,15 @@ def create_snapshots_from_excel(excel_path):
             conn.rollback()
         return []
     finally:
-        if conn and conn.is_connected():
-            cursor.close()
-            conn.close()
+        if conn:
+            try:
+                cursor.close()
+            except:
+                pass
+            try:
+                conn.close()
+            except:
+                pass
 
 if __name__ == "__main__":
     excel_file = "data/ttin cty.xlsx"
