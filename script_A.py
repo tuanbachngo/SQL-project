@@ -19,30 +19,30 @@ def run_import_firms_complete(excel_path):
         df_sources = all_sheets['source_info'].where(pd.notnull(all_sheets['source_info']), None)
         
         with engine.connect() as conn:
-            # BƯỚC 1: RESET DATABASE (Để mọi ID quay về 1)
-            print("Đang dọn dẹp database và reset bộ đếm ID...")
-            conn.execute(text("SET FOREIGN_KEY_CHECKS = 0;"))
-            conn.execute(text("TRUNCATE TABLE dim_firm;"))
-            conn.execute(text("TRUNCATE TABLE dim_industry_l2;"))
-            conn.execute(text("TRUNCATE TABLE dim_exchange;"))
-            conn.execute(text("TRUNCATE TABLE dim_data_source;")) # Thêm reset bảng source
-            conn.execute(text("SET FOREIGN_KEY_CHECKS = 1;"))
-            conn.commit()
+            # BƯỚC 1: Đã xóa phần TRUNCATE. 
+            print("Bắt đầu quá trình nạp dữ liệu (Bỏ qua nếu đã tồn tại, không nhảy ID)...")
 
-            # BƯỚC 2: NẠP NGUỒN DỮ LIỆU (Từ sheet source_info)
+            # BƯỚC 2: NẠP NGUỒN DỮ LIỆU (Kiểm tra theo source_name)
             print("Đang nạp danh mục nguồn dữ liệu...")
             for _, s_row in df_sources.iterrows():
-                conn.execute(text("""
-                    INSERT INTO dim_data_source (source_name, source_type, provider, note)
-                    VALUES (:name, :type, :prov, :note)
-                """), {
-                    "name": s_row['source_name'],
-                    "type": s_row['source_type'],
-                    "prov": s_row['provider'],
-                    "note": s_row['note']
-                })
+                # Kiểm tra tồn tại
+                exists = conn.execute(
+                    text("SELECT 1 FROM dim_data_source WHERE source_name = :name"),
+                    {"name": s_row['source_name']}
+                ).scalar()
+                
+                if not exists:
+                    conn.execute(text("""
+                        INSERT INTO dim_data_source (source_name, source_type, provider, note)
+                        VALUES (:name, :type, :prov, :note)
+                    """), {
+                        "name": s_row['source_name'],
+                        "type": s_row['source_type'],
+                        "prov": s_row['provider'],
+                        "note": s_row['note']
+                    })
 
-            # BƯỚC 3: XỬ LÝ SÀN (HOSE=1, HNX=2...)
+            # BƯỚC 3: XỬ LÝ SÀN (Kiểm tra theo exchange_code)
             print("Đang nạp danh mục sàn giao dịch...")
             unique_exchanges = []
             for exc_code in df_firms['exchange_code']:
@@ -51,10 +51,16 @@ def run_import_firms_complete(excel_path):
                     unique_exchanges.append((exc_code, exc_name))
             
             for code, name in unique_exchanges:
-                conn.execute(text("INSERT INTO dim_exchange (exchange_code, exchange_name) VALUES (:c, :n)"), 
-                             {"c": code, "n": name})
+                exists = conn.execute(
+                    text("SELECT 1 FROM dim_exchange WHERE exchange_code = :c"), 
+                    {"c": code}
+                ).scalar()
+                
+                if not exists:
+                    conn.execute(text("INSERT INTO dim_exchange (exchange_code, exchange_name) VALUES (:c, :n)"), 
+                                 {"c": code, "n": name})
 
-            # BƯỚC 4: XỬ LÝ NGÀNH (Thẳng hàng 1 -> 8)
+            # BƯỚC 4: XỬ LÝ NGÀNH (Kiểm tra theo industry_l2_name)
             print("Đang nạp danh mục ngành hàng...")
             unique_industries = []
             for ind in df_firms['industry_l2_name']:
@@ -62,30 +68,46 @@ def run_import_firms_complete(excel_path):
                     unique_industries.append(ind)
             
             for ind_name in unique_industries:
-                conn.execute(text("INSERT INTO dim_industry_l2 (industry_l2_name) VALUES (:n)"), {"n": ind_name})
+                exists = conn.execute(
+                    text("SELECT 1 FROM dim_industry_l2 WHERE industry_l2_name = :n"), 
+                    {"n": ind_name}
+                ).scalar()
+                
+                if not exists:
+                    conn.execute(text("INSERT INTO dim_industry_l2 (industry_l2_name) VALUES (:n)"), {"n": ind_name})
 
-            # BƯỚC 5: NẠP DOANH NGHIỆP
+            # BƯỚC 5: NẠP DOANH NGHIỆP (Kiểm tra theo ticker)
             print("Đang nạp danh sách doanh nghiệp...")
             for _, row in df_firms.iterrows():
-                exc_id = conn.execute(text("SELECT exchange_id FROM dim_exchange WHERE exchange_code = :c"),
-                                       {"c": row['exchange_code']}).fetchone()[0]
-                
-                ind_id = conn.execute(text("SELECT industry_l2_id FROM dim_industry_l2 WHERE industry_l2_name = :n"),
-                                      {"n": row['industry_l2_name']}).fetchone()[0]
+                # Kiểm tra xem doanh nghiệp (ticker) đã có trong DB chưa
+                firm_exists = conn.execute(
+                    text("SELECT 1 FROM dim_firm WHERE ticker = :ticker"),
+                    {"ticker": row['ticker']}
+                ).scalar()
 
-                conn.execute(text("""
-                    INSERT INTO dim_firm (ticker, company_name, exchange_id, industry_l2_id, founded_year, listed_year, status)
-                    VALUES (:ticker, :name, :ex_id, :ind_id, :f_year, :l_year, :status)
-                """), {
-                    "ticker": row['ticker'], "name": row['company_name'],
-                    "ex_id": exc_id, "ind_id": ind_id,
-                    "f_year": row['founded_year'], "l_year": row['listed_year'],
-                    "status": row.get('status', 'active')
-                })
+                # Nếu chưa có thì mới lấy ID của sàn/ngành và chèn dữ liệu
+                if not firm_exists:
+                    exc_id = conn.execute(text("SELECT exchange_id FROM dim_exchange WHERE exchange_code = :c"),
+                                           {"c": row['exchange_code']}).scalar()
+                    
+                    ind_id = conn.execute(text("SELECT industry_l2_id FROM dim_industry_l2 WHERE industry_l2_name = :n"),
+                                          {"n": row['industry_l2_name']}).scalar()
+
+                    # Chỉ chèn khi tìm thấy đủ ID map từ bảng DIM
+                    if exc_id and ind_id:
+                        conn.execute(text("""
+                            INSERT INTO dim_firm (ticker, company_name, exchange_id, industry_l2_id, founded_year, listed_year, status)
+                            VALUES (:ticker, :name, :ex_id, :ind_id, :f_year, :l_year, :status)
+                        """), {
+                            "ticker": row['ticker'], "name": row['company_name'],
+                            "ex_id": exc_id, "ind_id": ind_id,
+                            "f_year": row['founded_year'], "l_year": row['listed_year'],
+                            "status": row.get('status', 'active')
+                        })
             
             conn.commit()
             print("\n--- HOÀN THÀNH TẤT CẢ ---")
-            print("ID của tất cả các bảng DIM đã thẳng hàng và đầy đủ dữ liệu.")
+            print("Đã cập nhật dữ liệu mới. Các dòng trùng lặp được bỏ qua, bảo toàn ID.")
 
     except Exception as e:
         print(f"Lỗi khi thực hiện Script A: {e}")
