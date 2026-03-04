@@ -2,16 +2,13 @@ import argparse
 import re
 from datetime import date
 from typing import Any, Dict, List, Optional, Tuple
-import os
 import pandas as pd
 import pymysql
 import math
-from datetime import date
 
 print(">>> import_panel.py loaded")
-# ----------------------------
-# Cleaning / parsing helpers
-# ----------------------------
+
+# CLEANING / PARSING HELPERS
 NULL_LIKE = {"", " ", "-", "na", "n/a", "null", "none", "thiếu", "thieu", "nan"}
 
 def norm_colname(c: str) -> str:
@@ -32,12 +29,6 @@ def to_null(x: Any) -> Any:
     return x
 
 def smart_to_number(x: Any) -> Optional[float]:
-    """
-    Robust numeric parser for:
-    - 1,234,567.89 (US)
-    - 1.234.567,89 (VN/EU)
-    - -12.358.193.845.42 (rare messy)
-    """
     x = to_null(x)
     if x is None:
         return None
@@ -48,32 +39,24 @@ def smart_to_number(x: Any) -> Optional[float]:
     if not s:
         return None
 
-    # Remove currency symbols if any
     s = re.sub(r"[^\d\-\+\.,]", "", s)
 
-    # Heuristics
     if s.count(",") > 0 and s.count(".") > 0:
-        # Decide decimal by last separator position
         if s.rfind(".") > s.rfind(","):
-            # decimal is ".", thousands ","
             s = s.replace(",", "")
         else:
-            # decimal is ",", thousands "."
             s = s.replace(".", "")
             s = s.replace(",", ".")
     elif s.count(".") > 1 and s.count(",") == 0:
-        # many dots -> treat last dot as decimal, others thousands
+        
         parts = s.split(".")
         s = "".join(parts[:-1]) + "." + parts[-1]
     elif s.count(",") > 1 and s.count(".") == 0:
-        # many commas -> treat last comma as decimal, others thousands
         parts = s.split(",")
         s = "".join(parts[:-1]) + "." + parts[-1]
     elif s.count(",") == 1 and s.count(".") == 0:
-        # single comma -> likely decimal comma
         s = s.replace(",", ".")
     else:
-        # no special case: remove thousands commas
         s = s.replace(",", "")
 
     try:
@@ -93,14 +76,6 @@ def to_int(x: Any) -> Optional[int]:
 INNOV_RE = re.compile(r"^\s*([01])\s*(?:\((.*)\))?\s*$", re.DOTALL)
 
 def parse_innovation_cell(val: Any) -> Tuple[Optional[int], Optional[str]]:
-    """
-    Accept:
-      0/1
-      "1 (evidence...)"
-      "0(evidence...)"
-      "Yes/No", "Có/Không"
-    Return: (dummy, note)
-    """
     val = to_null(val)
     if val is None:
         return None, None
@@ -124,21 +99,10 @@ def parse_innovation_cell(val: Any) -> Tuple[Optional[int], Optional[str]]:
 
     return None, s
 
-
-# ----------------------------
-# MySQL helpers
-# ----------------------------
+# MySQL HELPERS
 def mysql_connect(host: str, port: int, user: str, password: str, db: str):
-    return pymysql.connect(
-        host=host,
-        port=port,
-        user=user,
-        password=password,
-        database=db,
-        charset="utf8mb4",
-        autocommit=False,
-        cursorclass=pymysql.cursors.DictCursor,
-    )
+    return pymysql.connect(host=host, port=port, user=user, password=password,
+        database=db, charset="utf8mb4", autocommit=False, cursorclass=pymysql.cursors.DictCursor,)
 
 def fetch_firm_id_map(conn, tickers: List[str]) -> Dict[str, int]:
     if not tickers:
@@ -151,10 +115,6 @@ def fetch_firm_id_map(conn, tickers: List[str]) -> Dict[str, int]:
     return {r["ticker"].upper(): int(r["firm_id"]) for r in rows}
 
 def upsert_many(conn, table: str, cols: List[str], rows: List[Tuple[Any, ...]]) -> int:
-    """
-    INSERT ... ON DUPLICATE KEY UPDATE ...
-    Assumes PK is (firm_id, fiscal_year, snapshot_id).
-    """
     if not rows:
         return 0
 
@@ -169,8 +129,7 @@ def upsert_many(conn, table: str, cols: List[str], rows: List[Tuple[Any, ...]]) 
     if update_expr:
         sql += f" ON DUPLICATE KEY UPDATE {update_expr}"
 
-    def _fix_nan(v):
-        # pandas/numpy NaN => None
+    def _fix_nan(v): # pandas/numpy NaN => None
         if v is None:
             return None
         if isinstance(v, float) and math.isnan(v):
@@ -188,16 +147,12 @@ def get_data_source_id(conn, source_name: str) -> int:
         row = cur.fetchone()
         if not row:
             raise SystemExit(
-                f"❌ source_name '{source_name}' not found in dim_data_source. "
+                f"source_name '{source_name}' not found in dim_data_source. "
                 f"Please choose an existing source_name (e.g., BCTC_Audited)."
             )
         return int(row["source_id"])
 
 def get_snapshot_id(conn, source_id: int, fiscal_year: int, version_tag: str) -> int:
-    """
-    Pick the latest snapshot for (source_id, fiscal_year, version_tag).
-    'Latest' is by snapshot_date then snapshot_id (tie-breaker).
-    """
     with conn.cursor() as cur:
         cur.execute(
             """
@@ -212,35 +167,27 @@ def get_snapshot_id(conn, source_id: int, fiscal_year: int, version_tag: str) ->
         row = cur.fetchone()
         if not row:
             raise SystemExit(
-                f"❌ Missing snapshot for year={fiscal_year}, source_id={source_id}, version_tag={version_tag}. "
+                f"Missing snapshot for year={fiscal_year}, source_id={source_id}, version_tag={version_tag}. "
                 f"Please run Script B first."
             )
         return int(row["snapshot_id"])
 
-
-# ----------------------------
-# Main load
-# ----------------------------
+# MAIN LOAD
 def main():
     ap = argparse.ArgumentParser(description="Load FINAL Excel (39 vars) into vn_firm_panel FACT tables.")
-
     ap.add_argument("--excel", default="data/Final Gộp 39 trường dữ liệu (FINAL).xlsx")
     ap.add_argument("--sheet", default="master_39")
-
     ap.add_argument("--db-host", default="localhost")
     ap.add_argument("--db-port", type=int, default=3306)
     ap.add_argument("--db-user", default="root")
     ap.add_argument("--db-pass", default="1234")
     ap.add_argument("--db-name", default="vn_firm_panel_test")
-
     ap.add_argument("--source-name", default="Vietstock")
-    ap.add_argument("--version-tag", default="v1.0_initial")
+    ap.add_argument("--version-tag", default="v2.0_initial")
     ap.add_argument("--created-by", default="Group_Member")
-
     ap.add_argument("--currency-code", default="VND")
     ap.add_argument("--unit-scale", type=int, default=1)
     ap.add_argument("--price-reference", default="close_year_end")
-
     args = ap.parse_args()
     print(">>> args =", args)
 
@@ -249,33 +196,23 @@ def main():
     print(">>> df rows =", len(df))
     print(">>> df cols =", list(df.columns))
 
-    # Require minimal keys
     if "ticker" not in df.columns or "fiscal_year" not in df.columns:
         raise SystemExit("Excel must contain columns: ticker, fiscal_year")
 
-    # Normalize keys
     df["ticker"] = df["ticker"].apply(norm_ticker)
     df["fiscal_year"] = df["fiscal_year"].apply(to_int)
 
-    # Drop blank rows
     df = df.dropna(subset=["ticker", "fiscal_year"]).copy()
     print(">>> df rows after drop blank =", len(df))
     print(">>> years found =", sorted(df["fiscal_year"].dropna().unique().tolist()))
     print(">>> tickers found =", sorted(df["ticker"].dropna().unique().tolist())[:10], "...")
 
-    # Common rename to match schema
-    rename_map = {
-        "dividend_payment": "dividend_cash_paid",
-        "eps": "eps_basic",
-        "total_inventory": "inventory",
-        "net_cash_from_operating": "net_cfo",
-        "cash_flows_from_investing": "net_cfi",
-        "capital_expenditure": "capex",
-        "employees": "employees_count",
-    }
+    rename_map = {"dividend_payment": "dividend_cash_paid","eps": "eps_basic",
+        "total_inventory": "inventory", "net_cash_from_operating": "net_cfo",
+        "cash_flows_from_investing": "net_cfi", "capital_expenditure": "capex",
+        "employees": "employees_count",}
     df.rename(columns={k: v for k, v in rename_map.items() if k in df.columns}, inplace=True)
 
-    # Parse innovation (keep in two new columns + evidence note)
     if "product_innovation" in df.columns:
         parsed = df["product_innovation"].apply(parse_innovation_cell)
         df["_prod_dummy"] = parsed.apply(lambda x: x[0])
@@ -290,20 +227,16 @@ def main():
     else:
         df["_proc_dummy"], df["_proc_note"] = None, None
 
-    # Connect DB
+    # CONNECT DATABASE
     conn = mysql_connect(args.db_host, args.db_port, args.db_user, args.db_pass, args.db_name)
-
-    # --- DEBUG STEP 3: verify DB connection + schema ---
     with conn.cursor() as cur:
         cur.execute("SELECT DATABASE() AS db")
         print(">>> Connected DB =", cur.fetchone()["db"])
-
         cur.execute("SELECT COUNT(*) AS n FROM dim_firm")
         print(">>> dim_firm rows =", cur.fetchone()["n"])
-
         cur.execute("SHOW TABLES LIKE 'fact_financial_year'")
         print(">>> has fact_financial_year =", cur.fetchone() is not None)
-    # --- END DEBUG ---
+  
 
     try:
         # Firm mapping
@@ -312,27 +245,19 @@ def main():
         missing = [t for t in tickers if t not in firm_map]
         if missing:
             raise SystemExit(f"Tickers not found in dim_firm (run import_firms first): {missing}")
-
         df["firm_id"] = df["ticker"].map(firm_map).astype(int)
 
         # Data source + snapshots per year
         source_id = get_data_source_id(conn, args.source_name)
         years = sorted(df["fiscal_year"].dropna().unique().tolist())
-
         snapshots: Dict[int, int] = {}
         for y in years:
             y = int(y)
             tag = args.version_tag
-            snap_id = get_snapshot_id(
-                conn,
-                source_id=source_id,
-                fiscal_year=y,
-                version_tag=tag,
-            )
+            snap_id = get_snapshot_id(conn, source_id=source_id, fiscal_year=y, version_tag=tag,)
             snapshots[y] = snap_id
             print(f">>> picked snapshot: year={y}, source_id={source_id}, version_tag={tag} -> snapshot_id={snap_id}")
            
-
         # Fill common metadata defaults
         df["_currency_code"] = args.currency_code
         df["_unit_scale"] = int(args.unit_scale)
@@ -340,18 +265,15 @@ def main():
 
         # Columns per FACT table (schema column names)
         key_cols = ["firm_id", "fiscal_year", "snapshot_id"]
-
         ownership_fields = ["managerial_inside_own", "state_own", "institutional_own", "foreign_own"]
         market_fields = ["shares_outstanding", "share_price", "market_value_equity", "dividend_cash_paid", "eps_basic"]
         cashflow_fields = ["net_cfo", "capex", "net_cfi"]
-        financial_fields = [
-            "net_sales", "total_assets", "selling_expenses", "general_admin_expenses",
+        financial_fields = ["net_sales", "total_assets", "selling_expenses", "general_admin_expenses",
             "intangible_assets_net", "manufacturing_overhead", "net_operating_income",
             "raw_material_consumption", "merchandise_purchase_year", "wip_goods_purchase",
             "outside_manufacturing_expenses", "production_cost", "rnd_expenses", "net_income",
             "total_equity", "total_liabilities", "cash_and_equivalents", "long_term_debt",
-            "current_assets", "current_liabilities", "growth_ratio", "inventory", "net_ppe"
-        ]
+            "current_assets", "current_liabilities", "growth_ratio", "inventory", "net_ppe"]
         meta_fields = ["employees_count", "firm_age"]
 
         # Convert numeric columns safely (only if exist)
@@ -359,7 +281,6 @@ def main():
             for c in cols:
                 if c not in df.columns:
                     df[c] = default
-
         ensure_cols(ownership_fields)
         ensure_cols(market_fields)
         ensure_cols(cashflow_fields)
@@ -375,7 +296,7 @@ def main():
             if c in df.columns:
                 df[c] = df[c].apply(to_int)
 
-        # Optional: if share_price missing but have market cap + shares, auto compute (comment if you don't want)
+        # If share_price missing but have market cap + shares, auto compute
         if "share_price" in df.columns:
             mask = df["share_price"].isna() & df["market_value_equity"].notna() & df["shares_outstanding"].notna() & (df["shares_outstanding"] != 0)
             df.loc[mask, "share_price"] = df.loc[mask, "market_value_equity"] / df.loc[mask, "shares_outstanding"]
@@ -393,15 +314,6 @@ def main():
             dyy["snapshot_id"] = snap_id
 
             # 1) ownership
-
-            s = pd.to_numeric(dyy["managerial_inside_own"], errors="coerce")
-            print(">>> managerial_inside_own min/max:", s.min(), s.max())
-
-            bad = dyy[s.notna() & ((s < 0) | (s > 1))][["ticker","fiscal_year","managerial_inside_own"]]
-            print(">>> bad managerial rows:", len(bad))
-            if len(bad):
-                print(bad.head(20).to_string(index=False))
-
             ownership_cols = key_cols + ownership_fields
             ownership_rows = [tuple(r.get(c) for c in ownership_cols) for _, r in dyy.iterrows()]
             stats["fact_ownership_year"] += upsert_many(conn, "fact_ownership_year", ownership_cols, ownership_rows)
@@ -434,7 +346,7 @@ def main():
             innov_cols = key_cols + ["product_innovation", "process_innovation", "evidence_source_id", "evidence_note"]
             dyy["product_innovation"] = dyy["_prod_dummy"]
             dyy["process_innovation"] = dyy["_proc_dummy"]
-            dyy["evidence_source_id"] = None
+            dyy["evidence_source_id"] = 6
 
             def merge_notes(r):
                 notes = []
@@ -456,11 +368,11 @@ def main():
         print(">>> stats so far =", stats)
         conn.commit()
 
-        print("✅ DONE. Rowcount (includes updates):")
+        print("DONE. Rowcount (includes updates):")
         for k, v in stats.items():
             print(f"  - {k}: {v}")
 
-        print("✅ Snapshots created:", snapshots)
+        print("Snapshots created:", snapshots)
 
     except Exception:
         conn.rollback()
