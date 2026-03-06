@@ -113,4 +113,5 @@ def run_import_firms_complete(excel_path):
         print(f"Lỗi khi thực hiện Script A: {e}")
 
 if __name__ == "__main__":
+
     run_import_firms_complete("data/ttin cty.xlsx")
