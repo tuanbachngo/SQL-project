@@ -1,6 +1,17 @@
 import pandas as pd
-from sqlalchemy import text
-from database_setup import engine
+from sqlalchemy import create_engine, text
+from sqlalchemy.engine import URL
+
+# 1. Cấu hình kết nối MySQL
+url = URL.create(
+    drivername="mysql+pymysql",
+    username="root",
+    password="1234",
+    host="localhost",
+    database="vn_firm_panel_test",
+)
+
+engine = create_engine(url)
 
 def run_import_firms_complete(excel_path):
     try:
@@ -89,4 +100,4 @@ def run_import_firms_complete(excel_path):
         print(f"Lỗi khi thực hiện Script A: {e}")
 
 if __name__ == "__main__":
-    run_import_firms_complete("ttin cty.xlsx")
+    run_import_firms_complete("data/ttin cty.xlsx")
