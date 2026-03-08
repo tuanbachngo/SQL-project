@@ -1,6 +1,0 @@
-{"timestamp":"2026-02-12T04:05:05.019317Z","level":"info","event":"DAG bundles loaded: dags-folder","logger":"airflow.dag_processing.bundles.manager.DagBundlesManager","filename":"manager.py","lineno":179}
-{"timestamp":"2026-02-12T04:05:05.021214Z","level":"info","event":"Filling up the DagBag from /opt/airflow/dags/ocr_pipeline_dag.py","logger":"airflow.models.dagbag.BundleDagBag","filename":"dagbag.py","lineno":593}
-{"timestamp":"2026-02-12T04:05:06.904962Z","level":"warning","event":"The `airflow.decorators.task` attribute is deprecated. Please use `'airflow.sdk.task'`.","category":"DeprecatedImportWarning","filename":"/opt/airflow/dags/ocr_pipeline_dag.py","lineno":11,"logger":"py.warnings"}
-{"timestamp":"2026-02-12T04:05:08.803926Z","level":"info","event":"AFC is enabled with max remote calls: 10.","logger":"google_genai.models","filename":"models.py","lineno":5219}
-{"timestamp":"2026-02-12T04:05:13.816060Z","level":"error","event":"Server indicated the task shouldn't be running anymore. Terminating process","detail":{"detail":{"reason":"not_running","message":"TI is no longer in the running state and task should terminate","current_state":"failed"}},"logger":"task"}
-{"timestamp":"2026-02-12T04:05:23.828988Z","level":"error","event":"Task killed!","logger":"task"}
