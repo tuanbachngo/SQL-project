@@ -19,8 +19,8 @@ def run_import_firms_complete(excel_path):
         df_sources = all_sheets['source_info'].where(pd.notnull(all_sheets['source_info']), None)
         
         with engine.connect() as conn:
-            # BƯỚC 1: Đã xóa phần TRUNCATE. 
-            print("Bắt đầu quá trình nạp dữ liệu (Bỏ qua nếu đã tồn tại, không nhảy ID)...")
+            # BƯỚC 1: Bắt đầu nạp dữ liệu
+            print("Bắt đầu quá trình nạp dữ liệu ")
 
             # BƯỚC 2: NẠP NGUỒN DỮ LIỆU (Kiểm tra theo source_name)
             print("Đang nạp danh mục nguồn dữ liệu...")
@@ -107,10 +107,11 @@ def run_import_firms_complete(excel_path):
             
             conn.commit()
             print("\n--- HOÀN THÀNH TẤT CẢ ---")
-            print("Đã cập nhật dữ liệu mới. Các dòng trùng lặp được bỏ qua, bảo toàn ID.")
+            print("Đã cập nhật dữ liệu mới.")
 
     except Exception as e:
         print(f"Lỗi khi thực hiện Script A: {e}")
 
 if __name__ == "__main__":
+
     run_import_firms_complete("data/ttin cty.xlsx")
