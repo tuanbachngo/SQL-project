@@ -1,0 +1,38 @@
+{"timestamp":"2026-02-12T04:13:57.861640Z","level":"info","event":"DAG bundles loaded: dags-folder","logger":"airflow.dag_processing.bundles.manager.DagBundlesManager","filename":"manager.py","lineno":179}
+{"timestamp":"2026-02-12T04:13:57.862960Z","level":"info","event":"Filling up the DagBag from /opt/airflow/dags/ocr_pipeline_dag.py","logger":"airflow.models.dagbag.BundleDagBag","filename":"dagbag.py","lineno":593}
+{"timestamp":"2026-02-12T04:13:59.476838Z","level":"warning","event":"The `airflow.decorators.task` attribute is deprecated. Please use `'airflow.sdk.task'`.","category":"DeprecatedImportWarning","filename":"/opt/airflow/dags/ocr_pipeline_dag.py","lineno":11,"logger":"py.warnings"}
+{"timestamp":"2026-02-12T04:14:04.753741Z","level":"info","event":"Đã đẩy thành công: BHN 2020","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:14:06.329708Z","level":"info","event":"Đã đẩy thành công: BHN 2021","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:14:08.066006Z","level":"info","event":"Đã đẩy thành công: BHN 2022","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:14:09.760445Z","level":"info","event":"Đã đẩy thành công: BHN 2023","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:14:11.737017Z","level":"info","event":"Đã đẩy thành công: BHN 2024","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:14:13.383733Z","level":"info","event":"Đã đẩy thành công: BSR 2020","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:14:15.040780Z","level":"info","event":"Đã đẩy thành công: BSR 2021","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:14:16.730478Z","level":"info","event":"Đã đẩy thành công: BSR 2022","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:14:18.405286Z","level":"info","event":"Đã đẩy thành công: BSR 2023","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:14:20.402951Z","level":"info","event":"Đã đẩy thành công: BSR 2024","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:14:22.275278Z","level":"info","event":"Đã đẩy thành công: DBC 2020","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:14:23.994136Z","level":"info","event":"Đã đẩy thành công: DBC 2021","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:14:25.928127Z","level":"info","event":"Đã đẩy thành công: DBC 2022","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:14:27.694655Z","level":"info","event":"Đã đẩy thành công: DBC 2023","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:14:29.951447Z","level":"info","event":"Đã đẩy thành công: DBC 2024","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:14:32.497358Z","level":"info","event":"Đã đẩy thành công: DGC 2020","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:14:35.587950Z","level":"info","event":"Đã đẩy thành công: DGC 2021","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:14:38.934715Z","level":"info","event":"Đã đẩy thành công: DGC 2022","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:14:50.901182Z","level":"info","event":"Đã đẩy thành công: DGC 2023","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:14:53.953515Z","level":"info","event":"Đã đẩy thành công: DGC 2024","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:14:56.336115Z","level":"info","event":"Đã đẩy thành công: DHG 2020","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:14:58.308287Z","level":"info","event":"Đã đẩy thành công: DHG 2021","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:15:00.068163Z","level":"info","event":"Đã đẩy thành công: DHG 2022","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:15:01.885818Z","level":"info","event":"Đã đẩy thành công: DHG 2023","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:15:03.508694Z","level":"info","event":"Đã đẩy thành công: DHG 2024","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:15:05.272174Z","level":"info","event":"Đã đẩy thành công: DPM 2020","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:15:07.091912Z","level":"info","event":"Đã đẩy thành công: DPM 2021","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:15:08.868769Z","level":"info","event":"Đã đẩy thành công: DPM 2022","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:15:11.170742Z","level":"info","event":"Đã đẩy thành công: DPM 2023","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:15:12.891525Z","level":"info","event":"Đã đẩy thành công: DPM 2024","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:15:14.602169Z","level":"info","event":"Đã đẩy thành công: GEE 2020","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:15:16.335718Z","level":"info","event":"Đã đẩy thành công: GEE 2021","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:15:18.137528Z","level":"info","event":"Đã đẩy thành công: GEE 2022","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:15:19.847711Z","level":"info","event":"Đã đẩy thành công: GEE 2023","logger":"task.stdout"}
+{"timestamp":"2026-02-12T04:15:21.439467Z","level":"error","event":"Task failed with exception","logger":"task","filename":"task_runner.py","lineno":1142,"error_detail":[{"exc_type":"APIError","exc_value":"APIError: [429]: Quota exceeded for quota metric 'Write requests' and limit 'Write requests per minute per user' of service 'sheets.googleapis.com' for consumer 'project_number:1024886143370'.","exc_notes":[],"syntax_error":null,"is_cause":false,"frames":[{"filename":"/home/airflow/.local/lib/python3.12/site-packages/airflow/sdk/execution_time/task_runner.py","lineno":1068,"name":"run"},{"filename":"/home/airflow/.local/lib/python3.12/site-packages/airflow/sdk/execution_time/task_runner.py","lineno":1477,"name":"_execute_task"},{"filename":"/home/airflow/.local/lib/python3.12/site-packages/airflow/sdk/bases/operator.py","lineno":417,"name":"wrapper"},{"filename":"/home/airflow/.local/lib/python3.12/site-packages/airflow/sdk/bases/decorator.py","lineno":252,"name":"execute"},{"filename":"/home/airflow/.local/lib/python3.12/site-packages/airflow/sdk/bases/operator.py","lineno":417,"name":"wrapper"},{"filename":"/home/airflow/.local/lib/python3.12/site-packages/airflow/providers/standard/operators/python.py","lineno":228,"name":"execute"},{"filename":"/home/airflow/.local/lib/python3.12/site-packages/airflow/providers/standard/operators/python.py","lineno":251,"name":"execute_callable"},{"filename":"/home/airflow/.local/lib/python3.12/site-packages/airflow/sdk/execution_time/callback_runner.py","lineno":82,"name":"run"},{"filename":"/opt/airflow/dags/ocr_pipeline_dag.py","lineno":68,"name":"sync_to_sheets"},{"filename":"/opt/airflow/include/gcs_to_sheets.py","lineno":30,"name":"upload_csvs_to_sheets"},{"filename":"/home/airflow/.local/lib/python3.12/site-packages/gspread/worksheet.py","lineno":1246,"name":"update"},{"filename":"/home/airflow/.local/lib/python3.12/site-packages/gspread/http_client.py","lineno":173,"name":"values_update"},{"filename":"/home/airflow/.local/lib/python3.12/site-packages/gspread/http_client.py","lineno":128,"name":"request"}],"is_group":false,"exceptions":[]}]}

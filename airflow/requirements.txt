@@ -1,0 +1,9 @@
+google-cloud-storage
+google-genai
+pypdfium2
+pillow
+gspread
+gcsfs
+google-auth
+pandas
+gspread_dataframe

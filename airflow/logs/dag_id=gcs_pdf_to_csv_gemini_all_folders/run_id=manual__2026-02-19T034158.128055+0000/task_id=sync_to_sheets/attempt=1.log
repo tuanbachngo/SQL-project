@@ -1,0 +1,105 @@
+{"timestamp":"2026-02-19T03:51:22.285127Z","level":"info","event":"DAG bundles loaded: dags-folder","logger":"airflow.dag_processing.bundles.manager.DagBundlesManager","filename":"manager.py","lineno":179}
+{"timestamp":"2026-02-19T03:51:22.287057Z","level":"info","event":"Filling up the DagBag from /opt/airflow/dags/ocr_pipeline_dag.py","logger":"airflow.models.dagbag.BundleDagBag","filename":"dagbag.py","lineno":593}
+{"timestamp":"2026-02-19T03:51:23.938314Z","level":"warning","event":"The `airflow.decorators.task` attribute is deprecated. Please use `'airflow.sdk.task'`.","category":"DeprecatedImportWarning","filename":"/opt/airflow/dags/ocr_pipeline_dag.py","lineno":11,"logger":"py.warnings"}
+{"timestamp":"2026-02-19T03:52:25.573083Z","level":"info","event":"Bỏ qua: BHN 2020 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T03:52:25.573839Z","level":"info","event":"Bỏ qua: BHN 2021 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T03:52:25.574512Z","level":"info","event":"Bỏ qua: BHN 2022 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T03:52:25.575070Z","level":"info","event":"Bỏ qua: BHN 2023 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T03:52:25.575897Z","level":"info","event":"Bỏ qua: BHN 2024 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T03:52:25.576215Z","level":"info","event":"Bỏ qua: BSR 2020 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T03:52:25.579613Z","level":"info","event":"Bỏ qua: BSR 2021 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T03:52:25.579775Z","level":"info","event":"Bỏ qua: BSR 2022 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T03:52:25.580072Z","level":"info","event":"Bỏ qua: BSR 2023 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T03:52:25.580269Z","level":"info","event":"Bỏ qua: BSR 2024 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T03:52:25.580797Z","level":"info","event":"Bỏ qua: DBC 2020 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T03:52:25.581081Z","level":"info","event":"Bỏ qua: DBC 2021 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T03:58:44.450988Z","level":"info","event":"Lỗi khi xử lý DBC 2022: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))","logger":"task.stdout"}
+{"timestamp":"2026-02-19T03:58:57.400397Z","level":"info","event":"Đã đẩy thành công file mới: DBC 2023","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:00:27.050587Z","level":"info","event":"Đã đẩy thành công file mới: DBC 2024","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:03:00.034432Z","level":"info","event":"Lỗi khi xử lý DGC 2020: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:03:02.607305Z","level":"info","event":"Đã đẩy thành công file mới: DGC 2021","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:07:43.951183Z","level":"info","event":"Lỗi khi xử lý DGC 2022: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:12:22.971669Z","level":"info","event":"Đã đẩy thành công file mới: DGC 2023","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:36.638847Z","level":"info","event":"Đã đẩy thành công file mới: DGC 2024","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.639161Z","level":"info","event":"Bỏ qua: DHG 2020 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.639687Z","level":"info","event":"Bỏ qua: DHG 2021 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.639956Z","level":"info","event":"Bỏ qua: DHG 2022 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.643067Z","level":"info","event":"Bỏ qua: DHG 2023 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.648273Z","level":"info","event":"Bỏ qua: DHG 2024 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.648689Z","level":"info","event":"Bỏ qua: DPM 2020 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.648926Z","level":"info","event":"Bỏ qua: DPM 2021 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.649195Z","level":"info","event":"Bỏ qua: DPM 2022 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.649369Z","level":"info","event":"Bỏ qua: DPM 2023 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.649563Z","level":"info","event":"Bỏ qua: DPM 2024 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.649840Z","level":"info","event":"Bỏ qua: GEE 2020 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.650066Z","level":"info","event":"Bỏ qua: GEE 2021 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.650222Z","level":"info","event":"Bỏ qua: GEE 2022 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.650367Z","level":"info","event":"Bỏ qua: GEE 2023 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.650594Z","level":"info","event":"Bỏ qua: GEE 2024 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.650797Z","level":"info","event":"Bỏ qua: GMD 2020 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.650976Z","level":"info","event":"Bỏ qua: GMD 2021 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.651109Z","level":"info","event":"Bỏ qua: GMD 2022 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.651235Z","level":"info","event":"Bỏ qua: GMD 2023 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.651351Z","level":"info","event":"Bỏ qua: GMD 2024 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.651463Z","level":"info","event":"Bỏ qua: GVR 2020 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.651573Z","level":"info","event":"Bỏ qua: GVR 2021 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.651688Z","level":"info","event":"Bỏ qua: GVR 2022 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.651822Z","level":"info","event":"Bỏ qua: GVR 2023 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.651989Z","level":"info","event":"Bỏ qua: GVR 2024 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.652124Z","level":"info","event":"Bỏ qua: NKG 2020 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.652255Z","level":"info","event":"Bỏ qua: NKG 2021 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.652438Z","level":"info","event":"Bỏ qua: NKG 2022 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.652598Z","level":"info","event":"Bỏ qua: NKG 2023 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.652753Z","level":"info","event":"Bỏ qua: NKG 2024 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.652951Z","level":"info","event":"Bỏ qua: PC1 2020 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.653210Z","level":"info","event":"Bỏ qua: PC1 2021 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.653440Z","level":"info","event":"Bỏ qua: PC1 2022 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.653605Z","level":"info","event":"Bỏ qua: PC1 2023 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.653855Z","level":"info","event":"Bỏ qua: PC1 2024 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.654019Z","level":"info","event":"Bỏ qua: PVC 2020 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.654186Z","level":"info","event":"Bỏ qua: PVC 2021 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.654403Z","level":"info","event":"Bỏ qua: PVC 2022 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.654567Z","level":"info","event":"Bỏ qua: PVC 2023 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.654713Z","level":"info","event":"Bỏ qua: PVC 2024 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.654882Z","level":"info","event":"Bỏ qua: PVD 2020 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.655037Z","level":"info","event":"Bỏ qua: PVD 2021 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.655216Z","level":"info","event":"Bỏ qua: PVD 2022 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.655575Z","level":"info","event":"Bỏ qua: PVD 2023 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.656188Z","level":"info","event":"Bỏ qua: PVD 2024 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.656390Z","level":"info","event":"Bỏ qua: PVS 2020 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.656735Z","level":"info","event":"Bỏ qua: PVS 2021 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.657461Z","level":"info","event":"Bỏ qua: PVS 2022 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.657668Z","level":"info","event":"Bỏ qua: PVS 2023 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.657807Z","level":"info","event":"Bỏ qua: PVS 2024 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.657934Z","level":"info","event":"Bỏ qua: RAL 2020 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.658055Z","level":"info","event":"Bỏ qua: RAL 2021 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.658193Z","level":"info","event":"Bỏ qua: RAL 2022 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.658613Z","level":"info","event":"Bỏ qua: RAL 2023 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.659385Z","level":"info","event":"Bỏ qua: RAL 2024 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.659694Z","level":"info","event":"Bỏ qua: TMS 2020 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.659879Z","level":"info","event":"Bỏ qua: TMS 2021 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.660081Z","level":"info","event":"Bỏ qua: TMS 2022 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.660398Z","level":"info","event":"Bỏ qua: TMS 2023 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.660620Z","level":"info","event":"Bỏ qua: TMS 2024 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.661323Z","level":"info","event":"Bỏ qua: VCG 2020 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.661690Z","level":"info","event":"Bỏ qua: VCG 2021 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.661871Z","level":"info","event":"Bỏ qua: VCG 2022 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.662016Z","level":"info","event":"Bỏ qua: VCG 2023 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.662148Z","level":"info","event":"Bỏ qua: VCG 2024 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.662334Z","level":"info","event":"Bỏ qua: VGC 2020 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.662531Z","level":"info","event":"Bỏ qua: VGC 2021 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.662704Z","level":"info","event":"Bỏ qua: VGC 2022 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.662886Z","level":"info","event":"Bỏ qua: VGC 2023 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.663030Z","level":"info","event":"Bỏ qua: VGC 2024 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.663303Z","level":"info","event":"Bỏ qua: VHC 2020 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.663583Z","level":"info","event":"Bỏ qua: VHC 2021 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.663760Z","level":"info","event":"Bỏ qua: VHC 2022 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.663946Z","level":"info","event":"Bỏ qua: VHC 2023 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.664409Z","level":"info","event":"Bỏ qua: VHC 2024 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.664570Z","level":"info","event":"Bỏ qua: VSC 2020 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.664716Z","level":"info","event":"Bỏ qua: VSC 2021 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.664893Z","level":"info","event":"Bỏ qua: VSC 2022 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.665110Z","level":"info","event":"Bỏ qua: VSC 2023 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.665291Z","level":"info","event":"Bỏ qua: VSC 2024 đã tồn tại trên Sheets.","logger":"task.stdout"}
+{"timestamp":"2026-02-19T04:14:38.639342Z","level":"info","event":"Done. Returned value was: Sync to Sheets Completed","logger":"airflow.task.operators.airflow.providers.standard.decorators.python._PythonDecoratedOperator","filename":"python.py","lineno":230}
+{"timestamp":"2026-02-19T04:14:38.639751Z","level":"info","event":"Pushing xcom","ti":"RuntimeTaskInstance(id=UUID('019c73fd-7bfd-7398-a4ce-c074d17aa85a'), task_id='sync_to_sheets', dag_id='gcs_pdf_to_csv_gemini_all_folders', run_id='manual__2026-02-19T03:41:58.128055+00:00', try_number=1, dag_version_id=UUID('019c5004-2479-7551-97d4-6d51fbcbe1c2'), map_index=-1, hostname='040f7de1c8a9', context_carrier={}, task=<Task(_PythonDecoratedOperator): sync_to_sheets>, bundle_instance=LocalDagBundle(name=dags-folder), max_tries=0, start_date=datetime.datetime(2026, 2, 19, 3, 51, 22, 253835, tzinfo=datetime.timezone.utc), end_date=None, state=<TaskInstanceState.RUNNING: 'running'>, is_mapped=False, rendered_map_index=None)","logger":"task","filename":"task_runner.py","lineno":1522}
