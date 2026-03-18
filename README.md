@@ -1,4 +1,3 @@
-# SQL-project
 # SQL Project: Vietnamese Firm Panel Data Pipeline
 
 This project is an end-to-end SQL and data engineering workflow for building a structured firm-year panel dataset of Vietnamese listed companies. The repository combines relational database design, Python ETL scripts, market data collection, quality control checks, and an Airflow-based OCR pipeline to turn raw financial reports into a clean and research-ready dataset.
