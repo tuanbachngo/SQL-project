@@ -1,10 +1,18 @@
+<div align="center">
+
 # SQL Project: Vietnamese Firm Panel Data Pipeline
 
-This project is an end-to-end SQL and data engineering workflow for building a structured firm-year panel dataset of Vietnamese listed companies. The repository combines relational database design, Python ETL scripts, market data collection, quality control checks, and an Airflow-based OCR pipeline to turn raw financial reports into a clean and research-ready dataset.
+</div>
 
-The main goal of the project is to standardize data from multiple sources into one consistent warehouse model, then produce a final panel containing 39 business, financial, ownership, market, innovation, and firm-level variables. In practice, the project covers both the database layer and the operational workflow needed to collect, clean, validate, and export the final dataset.
+> This project is an end-to-end SQL and data engineering workflow for building a structured firm-year panel dataset of Vietnamese listed companies. The repository combines relational database design, Python ETL scripts, market data collection, quality control checks, and an Airflow-based OCR pipeline to turn raw financial reports into a clean and research-ready dataset.
+>
+> The main goal of the project is to standardize data from multiple sources into one consistent warehouse model, then produce a final panel containing 39 business, financial, ownership, market, innovation, and firm-level variables. In practice, the project covers both the database layer and the operational workflow needed to collect, clean, validate, and export the final dataset.
+
+---
 
 ## What This Project Does
+
+<div align="left">
 
 - Designs a MySQL warehouse using a dimensional model with dimension, fact, snapshot, and audit tables.
 - Loads firm metadata, source metadata, and panel data from Excel into SQL.
@@ -16,9 +24,17 @@ The main goal of the project is to standardize data from multiple sources into o
 - Automates OCR extraction from annual-report PDFs stored in Google Cloud Storage.
 - Pushes OCR outputs to Google Sheets for manual review, consolidation, and missing-task tracking with Airflow.
 
+</div>
+
+---
+
 ## Data Model Overview
 
 The warehouse is built around the `vn_firm_panel_test` database and follows a fact-and-dimension structure:
+
+<table>
+<tr>
+<td valign="top">
 
 - Dimension tables store exchanges, industries, data sources, and firm master data.
 - Fact tables store yearly ownership, financial, cashflow, market, innovation, and firm metadata.
@@ -26,7 +42,13 @@ The warehouse is built around the `vn_firm_panel_test` database and follows a fa
 - Audit tables log manual corrections for transparency.
 - The view `vw_firm_panel_latest` produces the latest firm-year panel by selecting the newest snapshot for each company-year combination.
 
+</td>
+</tr>
+</table>
+
 The final dataset is organized around firm-year observations and includes variable groups such as:
+
+<div align="left">
 
 - Ownership structure
 - Financial statement variables
@@ -35,9 +57,15 @@ The final dataset is organized around firm-year observations and includes variab
 - Innovation dummies and evidence notes
 - Firm characteristics such as age and employee count
 
+</div>
+
+---
+
 ## Project Workflow
 
 The current workflow in this repository looks like this:
+
+<div align="left">
 
 1. Create the warehouse schema with [`etl/schema_and_seed.sql`](/C:/Users/Admin/Downloads/SQL/SQL-project/etl/schema_and_seed.sql).
 2. Load company and source metadata with [`etl/import_firms.py`](/C:/Users/Admin/Downloads/SQL/SQL-project/etl/import_firms.py).
@@ -48,10 +76,18 @@ The current workflow in this repository looks like this:
 7. Apply corrections and log overrides with [`etl/quick_fix.py`](/C:/Users/Admin/Downloads/SQL/SQL-project/etl/quick_fix.py).
 8. Export the final dataset from [`etl/export_panel.py`](/C:/Users/Admin/Downloads/SQL/SQL-project/etl/export_panel.py).
 
+</div>
+
 Alongside the local ETL flow, the Airflow pipelines automate document processing:
+
+<div align="left">
 
 - [`airflow/dags/ocr_pipeline_dag.py`](/C:/Users/Admin/Downloads/SQL/SQL-project/airflow/dags/ocr_pipeline_dag.py) processes PDFs from Google Cloud Storage, converts them into CSV outputs, syncs them to Google Sheets, and prepares manual review files.
 - [`airflow/dags/manual_collect_merge_dag.py`](/C:/Users/Admin/Downloads/SQL/SQL-project/airflow/dags/manual_collect_merge_dag.py) collects manual inputs, merges them into the master 39-variable sheet, and generates missing-task tracking.
+
+</div>
+
+---
 
 ## Repository Structure
 
@@ -77,7 +113,11 @@ SQL-project/
     `-- include/
 ```
 
+---
+
 ## Tech Stack
+
+<div align="left">
 
 - SQL / MySQL
 - Python
@@ -89,11 +129,21 @@ SQL-project/
 - Google Sheets integrations via `gspread`
 - OCR / document extraction workflow using Google AI tooling
 
+</div>
+
+---
+
 ## Why This Project Matters
 
 This repository shows how SQL can be used as the backbone of a real data pipeline, not just for isolated queries. Instead of stopping at schema design, the project connects database modeling with automated ingestion, data validation, manual review, and repeatable exports. The result is a practical workflow for transforming raw annual reports and supporting files into a usable analytical dataset.
 
+---
+
 ## Notes
+
+<div align="left">
 
 - The project currently mixes local ETL scripts and cloud-based orchestration, which makes it useful both for learning SQL data warehousing and for building a production-style data workflow.
 - Some scripts still assume local credentials, local file names, or environment-specific settings. Before sharing or deploying, those values should be moved into environment variables or configuration files.
+
+</div>
