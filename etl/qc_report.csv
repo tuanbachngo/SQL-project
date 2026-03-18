@@ -1,0 +1,13 @@
+﻿ticker,fiscal_year,table_name,column_name,error_type,message,old_value,new_value
+TEST,2020-2022,,fiscal_year,TIME_GAP,Dữ liệu bị đứt quãng thời gian,,
+TEST,2020,fact_financial_year,total_assets/total_liabilities/total_equity,ACCOUNTING_IMBALANCE,"Bảng cân đối không khớp. Chênh lệch: 712,553,730,766 (28.99%)","(2458144481968.0, 1000000000000.0, 2170698212734.0)",
+TEST,2022,fact_market_year,market_value_equity/shares_outstanding/share_price,INCONSISTENT,Sai lệch vốn hóa (26.54%) so với tính toán,"(1635870000000.0, 121269397.0, 17070.0)",
+TEST,2022,fact_financial_year,total_assets/total_liabilities/total_equity,ACCOUNTING_IMBALANCE,"Bảng cân đối không khớp. Chênh lệch: 4,243,377,324,093 (3437.80%)","(123433000000.0, 1165609976787.0, 3201200347306.0)",
+TEST,2022,fact_financial_year,current_assets,COMPONENT_ERROR,Tài sản ngắn hạn vượt quá tổng tài sản,1.31E+16,130000
+TEST,2022,fact_financial_year,net_ppe/intangible_assets_net/total_assets,COMPONENT_ERROR,Tổng PPE và tài sản vô hình vượt quá tổng tài sản,"(2007397494749.0, 5880029246.0, 123433000000.0)",
+TEST,2023,fact_market_year,shares_outstanding,INVALID_VALUE,Số lượng cổ phiếu phải lớn hơn 0,0,x
+TEST,2023,fact_market_year,market_value_equity/shares_outstanding/share_price,INCONSISTENT,Sai lệch vốn hóa (100.00%) so với tính toán,"(1890730000000.0, 0.0, 14160.0)",
+TEST,2023,fact_innovation_year,evidence_note,UNEXPECTED_PROCESS_NOTE,"Không đổi mới QT (0) nhưng ""process:"" lại có thuyết minh. (Gốc: ""Product: https://www.kbsec.com.vn/pic/Service/VSC%202Q2022%2030_9%20%281%29.pdf | Process: https://www.kbsec.com.vn/pic/Service/VSC%202Q2022%2030_9%20%281%29.pdf"")",Product: https://www.kbsec.com.vn/pic/Service/VSC%202Q2022%2030_9%20%281%29.pdf | Process: https://www.kbsec.com.vn/pic/Service/VSC%202Q2022%2030_9%20%281%29.pdf,
+TEST,2024,fact_ownership_year,foreign_own,RANGE_ERROR,"Giá trị -0.02 nằm ngoài khoảng [0,1]",-0.02,0.02
+TEST,2024,fact_financial_year,cash_and_equivalents/inventory/current_assets,COMPONENT_ERROR,Tổng tiền mặt và hàng tồn kho vượt quá tài sản ngắn hạn,"(1111546631380000.0, 47470252892.0, 1811557308602.0)",
+TEST,2024,fact_innovation_year,evidence_note,MISSING_PROCESS_NOTE,"Đổi mới QT (1) nhưng ghi chú ""process:"" trống hoặc nan. (Gốc: ""Product: https://viconship.com/bao-cao-thuong-nien-nam-2023-cong-ty-cp-container-viet-nam? | Process: nan"")",Product: https://viconship.com/bao-cao-thuong-nien-nam-2023-cong-ty-cp-container-viet-nam? | Process: nan,
