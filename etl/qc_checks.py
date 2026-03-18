@@ -428,10 +428,14 @@ def main():
         print("Đang chạy kiểm tra QC...")
         report_df = run_qc_checks(df)
         
-        if not report_df.empty and len(report_df) > 2:  
-            report_path = 'qc_report_final.csv'
-            report_df.to_csv(report_path, index=False, encoding='utf-8-sig')
-            print(f"Đã tìm thấy {len(report_df)-1} cảnh báo. Chi tiết tại: {report_path}") 
+        if not report_df.empty and len(report_df) > 2:
+            output_dir = "outputs"
+            os.makedirs(output_dir, exist_ok=True)
+            
+            report_path = os.path.join(output_dir, "qc_report.csv")
+            report_df.to_csv(report_path, index=False, encoding="utf-8-sig")
+            
+            print(f"Đã tìm thấy {len(report_df)-1} cảnh báo. Chi tiết tại: {report_path}")
         else:
             print("Chúc mừng! Dữ liệu không có lỗi logic nào.")
     else:
