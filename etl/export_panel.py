@@ -8,7 +8,11 @@ def export_to_csv():
     print("Đang trích xuất dữ liệu từ hệ thống...")
     df = pd.read_sql(query, engine)
     df = df.sort_values(by=['ticker', 'fiscal_year'])
-    output_path = 'final_firm_panel_dataset.csv'
+    
+    output_dir = "outputs"
+    os.makedirs(output_dir, exist_ok=True)
+    
+    output_path = os.path.join(output_dir, "panel_latest.csv")
     
     df.to_csv(output_path, index=False, encoding='utf-8-sig')
     engine.dispose()
